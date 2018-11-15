@@ -99,6 +99,13 @@ bool isD(const int x)
 /// Print an addend
 ostream& operator<<(ostream& os,const Addend& a)
 {
+  ///Printing styles
+  enum{FAPRILE,SUNPHO};
+  
+  /// Style
+  constexpr bool printStyle=
+    FAPRILE;
+    
   for(int i=0;i<(int)a.size();i++)
     {
       if(i) os<<".";
@@ -109,6 +116,11 @@ ostream& operator<<(ostream& os,const Addend& a)
       
       os<<(isM(v)?"M":"D")<<"["<<abs(v)<<"]";
     }
+  
+  // Append .D[0] if last entry is not D
+  if constexpr(printStyle==FAPRILE)
+    if(not isD(a.back()))
+      os<<".D[0]";
   
   return os;
 }
