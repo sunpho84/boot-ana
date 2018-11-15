@@ -112,6 +112,15 @@ ostream& operator<<(ostream& os,const Addend& a)
   return os;
 }
 
+/// Returns an indented stream
+ostream& indent(ostream& os,const int lev)
+{
+  for(int i=0;i<lev;i++)
+    os<<" ";
+  
+  return os;
+}
+
 /// Print the result
 ostream& operator<<(ostream& os,const WeightedAddend& x)
 {
@@ -121,9 +130,20 @@ ostream& operator<<(ostream& os,const WeightedAddend& x)
   // Print the result
   for(auto &[a,w] : x)
     {
-      if(first) first=false;
-      else os<<"+";
-      os<<w<<"*"<<a;
+      // Print the sign only if positive and not the first
+      if((not first) and w>=0)
+	 os<<"+";
+      first=false;
+      
+      // Absolute value of the weight
+      const int aw=
+	abs(w);
+      
+      // Prints the coefficient only if not 1
+      if(aw!=1)
+	os<<abs(w)<<"*";
+      
+      os<<a;
     }
   
   return os;
@@ -150,11 +170,16 @@ Addend getTerm(const int i,const int n)
   return ret;
 }
 
-int stackSize=0;
-int stackSizeMax=0;
+/// Current stack size
+int stackSize=
+		    0;
+
+/// Maximal dimension reached for the stack
+int stackSizeMax=
+		    0;
 
 /// Performs all manipulaitions and call iteratively
-void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int indent=0)
+void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int indentLev=0)
 {
   stackSize++;
   stackSizeMax=max(stackSize,stackSizeMax);
@@ -166,8 +191,7 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
   // Print input
   if constexpr(DEBUG)
     {
-      for(int i=0;i<indent;i++) cout<<"   ";
-      cout<<a<<endl;
+      indent(cout,indentLev)<<w<<"*"<<a<<endl;
     }
   
   while(pos>=0 and a.size()!=1)
@@ -201,9 +225,14 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
 	      for(int i=pos+1;i<(int)c.size();i++) c[i]=a[i+1];
 	      
 	      // Call nested
-	      simplifyAndAdd(res,c,pos,indent+1);
+	      simplifyAndAdd(res,c,pos,w,indentLev+1);
 	      
 	      swap(v_next,v);
+	      if constexpr(DEBUG)
+	        {
+		  indent(cout,indentLev)<<"swapping"<<endl;
+		  indent(cout,indentLev)<<w<<"*"<<a<<endl;
+		}
 	      
 	      // If next position is the last one, do not move
 	      if(not nextIsLast) pos++;
@@ -211,7 +240,8 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
 	  // If next is not an M, it's a D. Assuming is last one, sum it to current pos and remove last
 	  else
 	    {
-	      if(not nextIsLast) CRASH("Next must be last");
+	      if(not nextIsLast)
+		CRASH("Next must be last");
 	      
 	      v+=v_next;
 	      a.pop_back();
@@ -222,23 +252,27 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
 	pos--;
       
       if constexpr(DEBUG)
-	{
-	  for(int i=0;i<indent;i++) cout<<"   ";
-	  cout<<a<<endl;
-	}
+        indent(cout,indentLev)<<a<<endl;
     }
   
+  // Print some info on what is getting added
+  if constexpr(DEBUG)
+    {
+      indent(cout,indentLev)<<"Adding "<<w<<" to "<<a<<" "<<res[a]<<endl;
+    cout<<"---"<<endl;
+    }
+  
+  // Add the result
   res[a]+=w;
   
-  if constexpr(DEBUG)
-    cout<<"---"<<endl;
-  
+  // Decrease the stack size
   stackSize--;
 }
 
 /// Gets the n+1 from n
 WeightedAddend differentiate(const WeightedAddend& in)
 {
+  /// Result
   WeightedAddend out;
   
   for(const auto& [a,w] : in)
@@ -342,11 +376,13 @@ WeightedAddend operator-(const WeightedAddend& in1,const WeightedAddend& in2)
 
 int main(int narg,char **arg)
 {
+  /// Degree of the derivative
   const int n
     =3;
   
   cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
   
+  /// Timer used for benchmarks
   double elapsed;
   
   /////////////////////////////////////////////////////////////////
