@@ -376,7 +376,7 @@ WeightedAddend operator-(const WeightedAddend& in1,const WeightedAddend& in2)
 }
 
 /// Compute with a given n
-void body(const int n,const bool computeDirect=false)
+void bench(const int n,const bool computeDirect=false)
 {
   cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
   
@@ -431,12 +431,22 @@ void body(const int n,const bool computeDirect=false)
 
 int main(int narg,char **arg)
 {
-  /// Degree of the derivative
-  const int n
-    =30;
+  // /// Degree of the derivative
+  // const int n
+  //   =30;
   
-  for(int i=6;i<=n;i++)
-    body(i);
+  // for(int i=6;i<=n;i++)
+  //   bench(i);
+  
+  if(narg<2)
+    CRASH("Use %s n",arg[0]);
+  
+  // Gets n as an argument
+  int n;
+  if(sscanf(arg[1],"%d",&n)!=1)
+    CRASH("Error converting %s to n",arg[1]);
+  
+  cout<<computeIterativetly(n)<<endl;
   
   return 0;
 }
