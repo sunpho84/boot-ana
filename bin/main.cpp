@@ -3,6 +3,7 @@
 #endif
 
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -374,36 +375,68 @@ WeightedAddend operator-(const WeightedAddend& in1,const WeightedAddend& in2)
   return prune(res);
 }
 
+/// Compute with a given n
+void body(const int n,const bool computeDirect=false)
+{
+  cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  /// Timer used for benchmarks
+  double elapsedDirect=
+    0;
+  
+  /// Result of the direct calculation
+  WeightedAddend directRes;
+  
+  if(computeDirect)
+    {
+      directRes=benchmark(computeDirectly,elapsedDirect,n);
+      
+      cout<<directRes.size()<<" terms"<<endl;
+      cout<<"Elapsed time to compute "<<n<<" directly: "<<elapsedDirect<<" s"<<endl;
+      
+      /////////////////////////////////////////////////////////////////
+      cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
+      /////////////////////////////////////////////////////////////////
+    }
+  
+  /// Timer used for benchmarks
+  double elapsedIter;
+  
+  /// Result of the iterative calculation
+  WeightedAddend iterRes=
+    benchmark(computeIterativetly,elapsedIter,n);
+  
+  cout<<iterRes.size()<<" terms"<<endl;
+  cout<<"Elapsed time to compute "<<n<<" iteratively: "<<elapsedIter<<" s"<<endl;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  /// Output file
+  if constexpr(0)
+    {
+      ofstream iterResFile("ResIter"+to_string(n)+".txt");
+      iterResFile<<iterRes<<endl;
+    }
+  
+  // Check and improvement report
+  if(computeDirect)
+    {
+      cout<<iterRes-directRes<<endl;
+      
+      cout<<"Improvement: "<<elapsedDirect/elapsedIter<<endl;
+    }
+}
+
 int main(int narg,char **arg)
 {
   /// Degree of the derivative
   const int n
-    =3;
+    =30;
   
-  cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
-  
-  /// Timer used for benchmarks
-  double elapsed;
-  
-  /////////////////////////////////////////////////////////////////
-  
-  WeightedAddend directRes=
-    benchmark(computeDirectly,elapsed,n);
-  
-  cout<<directRes<<endl;
-  cout<<"Elapsed time to compute directly: "<<elapsed<<" s"<<endl;
-  
-  /////////////////////////////////////////////////////////////////
-  cout<<SEPARATOR<<" "<<n<<" "<<SEPARATOR<<endl;
-  /////////////////////////////////////////////////////////////////
-  
-  WeightedAddend iterRes=
-    benchmark(computeIterativetly,elapsed,n);
-  
-  cout<<iterRes<<endl;
-  cout<<"Elapsed time to compute iteratively: "<<elapsed<<" s"<<endl;
-  
-  cout<<iterRes-directRes<<endl;
+  for(int i=6;i<=n;i++)
+    body(i);
   
   return 0;
 }
