@@ -191,7 +191,7 @@ int stackSize=
 int stackSizeMax=
 		    0;
 
-/// Performs all manipulaitions and call iteratively
+/// Performs all manipulations and call iteratively
 void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int indentLev=0)
 {
   stackSize++;
@@ -264,6 +264,7 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
       else
 	pos--;
       
+      // Write the current step
       if constexpr(DEBUG)
         indent(cout,indentLev)<<a<<endl;
     }
@@ -282,7 +283,7 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
   stackSize--;
 }
 
-/// Gets the n+1 from n
+/// Gets the n+1-th derivative from the n-th ine
 WeightedAddend differentiate(const WeightedAddend& in)
 {
   /// Result
