@@ -5,10 +5,71 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <vector>
 
 using namespace std;
+
+class sanfo_ostream
+{
+  /// buffered out
+  ostream& out;
+  
+  /// buffer
+  ostringstream buf;
+  
+public:
+  
+  void dump()
+  {
+    out<<buf.str();
+    buf.clear();
+    buf.str("");
+  }
+  
+  /// constructor
+  sanfo_ostream(ostream& out) : out(out)
+  {
+  }
+  
+  /// destructor
+  ~sanfo_ostream()
+  {
+    dump();
+  }
+  
+  /// print
+  friend sanfo_ostream& operator<<(sanfo_ostream& os,const int& t)
+  {
+    os.buf<<t;
+    
+    return os;
+  }
+  
+  /// print
+  friend sanfo_ostream& operator<<(sanfo_ostream& os,const char t[])
+  {
+    int i=0;
+    
+    while(t[i]!='\0')
+      {
+	char c=t[i];
+	os.buf<<c;
+	if((c=='.' or c=='+') and os.buf.str().length()>100)
+	  {
+	    os.dump();
+	    os.buf<<"\n";
+	  }
+	
+	i++;
+      }
+    
+    return os;
+  }
+};
+
+sanfo_ostream fout(cout);
 
 /// Switch to enable debug
 constexpr bool DEBUG=
@@ -97,7 +158,7 @@ bool isD(const int x)
 }
 
 /// Print an addend
-ostream& operator<<(ostream& os,const Addend& a)
+sanfo_ostream& operator<<(sanfo_ostream& os,const Addend& a)
 {
   ///Printing styles
   enum{FAPRILE,SUNPHO};
@@ -114,19 +175,19 @@ ostream& operator<<(ostream& os,const Addend& a)
       const int v=
 	a[i];
       
-      os<<(isM(v)?"M":"D")<<"["<<abs(v)<<"]";
+      os<<(isM(v)?"m":"d")<<"["<<abs(v)<<"]";
     }
   
-  // Append .D[0] if last entry is not D
+  // Append .d[0] if last entry is not d
   if constexpr(printStyle==FAPRILE)
     if(not isD(a.back()))
-      os<<".D[0]";
+      os<<".d[0]";
   
   return os;
 }
 
 /// Returns an indented stream
-ostream& indent(ostream& os,const int lev)
+sanfo_ostream& indent(sanfo_ostream& os,const int lev)
 {
   for(int i=0;i<lev;i++)
     os<<" ";
@@ -135,7 +196,7 @@ ostream& indent(ostream& os,const int lev)
 }
 
 /// Print the result
-ostream& operator<<(ostream& os,const WeightedAddend& x)
+sanfo_ostream& operator<<(sanfo_ostream& os,const WeightedAddend& x)
 {
   bool first=
     true;
@@ -204,7 +265,7 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
   // Print input
   if constexpr(DEBUG)
     {
-      indent(cout,indentLev)<<w<<"*"<<a<<endl;
+      indent(fout,indentLev)<<w<<"*"<<a<<"\n";
     }
   
   while(pos>=0 and a.size()!=1)
@@ -243,8 +304,8 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
 	      swap(v_next,v);
 	      if constexpr(DEBUG)
 	        {
-		  indent(cout,indentLev)<<"swapping"<<endl;
-		  indent(cout,indentLev)<<w<<"*"<<a<<endl;
+		  indent(fout,indentLev)<<"swapping"<<"\f";
+		  indent(fout,indentLev)<<w<<"*"<<a<<"\f";
 		}
 	      
 	      // If next position is the last one, do not move
@@ -266,13 +327,13 @@ void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int in
       
       // Write the current step
       if constexpr(DEBUG)
-        indent(cout,indentLev)<<a<<endl;
+        indent(fout,indentLev)<<a<<"\n";
     }
   
   // Print some info on what is getting added
   if constexpr(DEBUG)
     {
-      indent(cout,indentLev)<<"Adding "<<w<<" to "<<a<<" "<<res[a]<<endl;
+      indent(fout,indentLev)<<"Adding "<<w<<" to "<<a<<" "<<res[a]<<"\n";
     cout<<"---"<<endl;
     }
   
@@ -429,14 +490,15 @@ void bench(const int n,const bool computeDirect=false)
   /// Output file
   if constexpr(0)
     {
-      ofstream iterResFile("ResIter"+to_string(n)+".txt");
-      iterResFile<<iterRes<<endl;
+      ofstream rawIterResFile("ResIter"+to_string(n)+".txt");
+      sanfo_ostream iterResFile(rawIterResFile);
+      iterResFile<<iterRes<<"\n";
     }
   
   // Check and improvement report
   if(computeDirect)
     {
-      cout<<iterRes-directRes<<endl;
+      fout<<iterRes-directRes<<"\n";
       
       cout<<"Improvement: "<<elapsedDirect/elapsedIter<<endl;
     }
@@ -459,7 +521,7 @@ int main(int narg,char **arg)
   if(sscanf(arg[1],"%d",&n)!=1)
     CRASH("Error converting %s to n",arg[1]);
   
-  cout<<computeIterativetly(n)<<endl;
+  fout<<computeIterativetly(n)<<"\n";
   
   return 0;
 }
