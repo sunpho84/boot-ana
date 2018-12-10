@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <cmath>
 #include <vector>
 
 using namespace std;
@@ -40,7 +41,8 @@ public:
   }
   
   /// print
-  friend sanfo_ostream& operator<<(sanfo_ostream& os,const int& t)
+  template <typename T>
+  friend sanfo_ostream& operator<<(sanfo_ostream& os,const T& t)
   {
     os.buf<<t;
     
@@ -125,6 +127,8 @@ double convTimeDiff(const decltype(takeTime()-takeTime())& diff)
 
 /////////////////////////////////////////////////////////////////
 
+typedef int64_t Weight_t;
+
 /// Separate blocks
 constexpr char SEPARATOR[]=
   "/////////////////////////////////////////////////////////////////";
@@ -135,7 +139,7 @@ using Addend=
 
 /// Maps each addend to its weight
 using WeightedAddend=
-  map<Addend,int>;
+  map<Addend,Weight_t>;
 
 /// Representation of M
 constexpr int M0=
@@ -210,7 +214,7 @@ sanfo_ostream& operator<<(sanfo_ostream& os,const WeightedAddend& x)
       first=false;
       
       // Absolute value of the weight
-      const int aw=
+      const Weight_t aw=
 	abs(w);
       
       // Prints the coefficient only if not 1
@@ -253,7 +257,7 @@ int stackSizeMax=
 		    0;
 
 /// Performs all manipulations and call iteratively
-void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const int w=1,int indentLev=0)
+void simplifyAndAdd(WeightedAddend& res,Addend a,int pos=-1,const Weight_t w=1,int indentLev=0)
 {
   stackSize++;
   stackSizeMax=max(stackSize,stackSizeMax);
